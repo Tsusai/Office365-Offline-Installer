@@ -1,9 +1,9 @@
 object Form1: TForm1
   Left = 212
   Top = 185
-  Width = 342
-  Height = 159
   Caption = 'Office 2013/365 Installer'
+  ClientHeight = 120
+  ClientWidth = 326
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -11,6 +11,7 @@ object Form1: TForm1
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  Scaled = False
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
@@ -37,9 +38,5 @@ object Form1: TForm1
       'Office 365 Pro Plus'
       'Office 365 Small Buisness Premium')
     TabOrder = 1
-  end
-  object VistaAltFix1: TVistaAltFix
-    Left = 224
-    Top = 8
   end
 end
