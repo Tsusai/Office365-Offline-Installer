@@ -2,7 +2,7 @@ object Form1: TForm1
   Left = 212
   Top = 185
   Caption = 'Office 2013/365 Installer'
-  ClientHeight = 154
+  ClientHeight = 157
   ClientWidth = 369
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -17,7 +17,7 @@ object Form1: TForm1
   TextHeight = 13
   object Button1: TButton
     Left = 8
-    Top = 119
+    Top = 127
     Width = 97
     Height = 25
     Caption = 'Install'
@@ -28,15 +28,16 @@ object Form1: TForm1
     Left = 8
     Top = 6
     Width = 209
-    Height = 107
+    Height = 115
     Caption = 'Version'
     ItemIndex = 0
     Items.Strings = (
       'Office 2013 Home && Student'
       'Office 2013 Home && Buisness'
-      'Office 365 Home Premium'
-      'Office 365 Pro Plus'
-      'Office 365 Small Buisness Premium')
+      'Office   365 Home Premium'
+      'Office   365 Pro Plus'
+      'Office   365 Buisness'
+      'Office   365 Small Buisness Premium')
     TabOrder = 1
     OnClick = RadioGroup1Click
   end
@@ -44,7 +45,7 @@ object Form1: TForm1
     Left = 223
     Top = 8
     Width = 138
-    Height = 136
+    Height = 144
     Color = clBtnFace
     Enabled = False
     ItemHeight = 13
@@ -54,8 +55,8 @@ object Form1: TForm1
       'PowerPoint'
       'Word'
       'Outlook'
-      'Access'
       'Publisher'
+      'Access'
       'OneDrive'
       'InfoPath'
       'Lync')
@@ -63,7 +64,7 @@ object Form1: TForm1
   end
   object CustomCheck: TCheckBox
     Left = 111
-    Top = 123
+    Top = 131
     Width = 97
     Height = 17
     Caption = 'Customize Install'

@@ -79,7 +79,8 @@ begin
 		1: ProdVersion := 'HomeBusinessRetail';
 		2: ProdVersion := 'O365HomePremRetail';
 		3: ProdVersion := 'O365ProPlusRetail';
-		4: ProdVersion := 'O365SmallBusPremRetail';
+		4: ProdVersion := 'O365BusinessRetail';
+		5: ProdVersion := 'O365SmallBusPremRetail';
 		end;
 	end;
 
@@ -152,30 +153,62 @@ end;
 procedure TForm1.AdjustCustomInstall;
 var
 	idx : integer;
-	Limit : byte;
+	Cidx : integer;
+	//Limit : set of 0..9;
+	Prog : TStringlist;
 begin
-	//Reset
+	//Disable All
+	Prog := TStringList.Create;
+	Prog.Clear;
 	CheckListBox1.ItemIndex := -1;
-	for idx := CheckListBox1.Count - 1 downto 0 do
+	for idx := 0 to CheckListBox1.Count -1 do
 	Begin
-		CheckListBox1.ItemEnabled[idx] := true;
-		CheckListBox1.Checked[idx] := true;
+		CheckListBox1.ItemEnabled[idx] := false;
+		CheckListBox1.Checked[idx] := false;
 	end;
 
 	case RadioGroup1.ItemIndex of
-	0: Limit := 4;
-	1: Limit := 5;
-	2: Limit := 7;
-	3: Limit := 10;
-	4: Limit := 10;
-	else Limit := 10;
+	0: Prog.CommaText := 'Excel,OneNote,PowerPoint,Word';
+	1: Prog.CommaText := 'Excel,OneNote,Outlook,PowerPoint,Word';
+	2: Prog.CommaText := 'Access,Excel,OneNote,Outlook,PowerPoint,Publisher,Word';
+	3: Prog.CommaText := 'Access,Excel,InfoPath,Lync,OneNote,Outlook,PowerPoint,Publisher,Word,OneDrive';
+	4: Prog.CommaText := 'Excel,OneNote,Outlook,PowerPoint,Publisher,Word,OneDrive';
+	5: Prog.CommaText := 'Access,Excel,InfoPath,Lync,OneNote,Outlook,PowerPoint,Publisher,Word,OneDrive';
 	end;
 
-	for idx := limit to CheckListBox1.Count -1 do
-	begin
-		CheckListBox1.Checked[idx] := false;
-		CheckListBox1.ItemEnabled[idx] := false;
+	//Yes, Number searching is nanoseconds faster, however with Microsoft coming up
+	//with new SKU combinations, it's just tons easier for this little program
+	//to search by names
+	(*case RadioGroup1.ItemIndex of
+	0: Limit := [0..3];
+	1: Limit := [0..4];
+	2: Limit := [0..6];
+	3: Limit := [0..9];
+	4: Limit := [0..5,7];
+	5: Limit := [0..9];
 	end;
+	{for idx := 0 to CheckListBox1.Count -1 do
+	begin
+		if idx in Limit then
+		begin
+			CheckListBox1.Checked[idx] := true;
+			CheckListBox1.ItemEnabled[idx] := true;
+		end;
+	end;
+	*)
+
+	for idx := 0 to Prog.Count -1 do
+	begin
+		Cidx := CheckListBox1.Items.IndexOf(Prog[idx]);
+		if Cidx <> - 1 then
+		begin
+			CheckListBox1.Checked[Cidx] := true;
+			CheckListBox1.ItemEnabled[Cidx] := true;
+		end;
+	end;
+
+ Prog.Free;
+
 end;
 
 procedure TForm1.CustomCheckClick(Sender: TObject);
