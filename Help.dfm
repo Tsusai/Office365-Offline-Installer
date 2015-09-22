@@ -13,7 +13,6 @@ object HelpForm: THelpForm
   Font.Style = []
   OldCreateOrder = False
   OnCreate = FormCreate
-  OnShow = FormShow
   DesignSize = (
     499
     213)

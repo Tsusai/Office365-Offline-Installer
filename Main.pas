@@ -7,19 +7,19 @@ uses
 	Dialogs, StdCtrls, ExtCtrls, Vcl.CheckLst;
 
 type
-	TForm1 = class(TForm)
-		Button1: TButton;
-		RadioGroup1: TRadioGroup;
-		CheckListBox1: TCheckListBox;
+	TMainform = class(TForm)
+    RunBtn: TButton;
+    VersionList: TRadioGroup;
+    SoftwareList: TCheckListBox;
 		CustomCheck: TCheckBox;
-    ComboBox1: TComboBox;
-    Button2: TButton;
-    ComboBox2: TComboBox;
-		procedure Button1Click(Sender: TObject);
+		VerBox: TComboBox;
+    InstrBtn: TButton;
+    TaskBox: TComboBox;
+		procedure RunBtnClick(Sender: TObject);
 		procedure FormCreate(Sender: TObject);
 		procedure CustomCheckClick(Sender: TObject);
-		procedure RadioGroup1Click(Sender: TObject);
-    procedure Button2Click(Sender: TObject);
+		procedure VersionListClick(Sender: TObject);
+		procedure InstrBtnClick(Sender: TObject);
 	private
 		{ Private declarations }
 	public
@@ -29,11 +29,11 @@ type
 	end;
 
 var
-	Form1: TForm1;
+	Mainform: TMainform;
 
 implementation
 uses
-  Help,
+	Help,
 	ShellAPI,
 	XMLIntf,
 	XmlDoc;
@@ -52,7 +52,7 @@ var
 begin
 	if Hidden then i := SW_HIDE else i := SW_NORMAL;
 	ShellExecute(
-		Form1.Handle,
+		Mainform.Handle,
 		'open',
 		PChar(Command),
 		PChar(Params),
@@ -61,7 +61,7 @@ begin
 end;
 
 //Generates the configuration.xml
-procedure TForm1.GenerateXML;
+procedure TMainform.GenerateXML;
 var
 	XML : IXMLDocument;
 	RootNode, CurNode, ProdNode : IXMLNode;
@@ -76,7 +76,7 @@ begin
 	ProdVersion := 'O365SmallBusPremRetail'; //Need a default for Download Mode
 	Exclude := '';
 
-	case RadioGroup1.ItemIndex of
+	case VersionList.ItemIndex of
 	0: ProdVersion := 'HomeStudentRetail';
 	1: ProdVersion := 'HomeBusinessRetail';
 	2: ProdVersion := 'O365HomePremRetail';
@@ -90,12 +90,13 @@ begin
 	XML := NewXMLDocument;
 	XML.Options := [doNodeAutoIndent];
 	RootNode := XML.AddChild('Configuration');
+		//forced indent so I can follow flow
 		CurNode := RootNode.AddChild('Add');
 
-    case ComboBox1.ItemIndex of
-    0: CurNode.Attributes['SourcePath'] := '.\2013';
-    1: CurNode.Attributes['SourcePath'] := '.\2016';
-    end;
+		case VerBox.ItemIndex of
+		0: CurNode.Attributes['SourcePath'] := '.\2013';
+		1: CurNode.Attributes['SourcePath'] := '.\2016';
+		end;
 		CurNode.Attributes['OfficeClientEdition'] := '32';
 			ProdNode := CurNode.AddChild('Product');
 			//Product
@@ -106,13 +107,13 @@ begin
 				//Exclude App Section for custom install
 				if (CustomCheck.Checked) then
 				begin
-					for idx := 0 to CheckListBox1.Count-1 do
+					for idx := 0 to SoftwareList.Count-1 do
 					begin
-						if (CheckListBox1.ItemEnabled[idx]) then
+						if (SoftwareList.ItemEnabled[idx]) then
 						begin
-							if not (CheckListbox1.Checked[idx]) then
+							if not (SoftwareList.Checked[idx]) then
 							begin
-								Exclude := CheckListBox1.Items.Strings[idx];
+								Exclude := SoftwareList.Items.Strings[idx];
 								if Exclude = 'OneDrive' then Exclude := 'Groove';
 								CurNode := ProdNode.AddChild('ExcludeApp');
 								CurNode.Attributes['ID'] := Exclude;
@@ -136,35 +137,35 @@ begin
 
 end;
 
-procedure TForm1.Button1Click(Sender: TObject);
+procedure TMainform.RunBtnClick(Sender: TObject);
 var
-  Exec : string;
-  Switch : string;
-  Hide : boolean;
+	Exec : string;
+	Switch : string;
+	Hide : boolean;
 begin
 	SetCurrentDirectory(PChar(AppPath+'Setup\'));
 	GenerateXML;
-  Hide := false;
+	Hide := false;
 
-  case ComboBox1.ItemIndex of
-  0: Exec := 'setup2013.exe';
-  1: Exec := 'setup2016.exe';
-  end;
+	case VerBox.ItemIndex of
+	0: Exec := 'setup2013.exe';
+	1: Exec := 'setup2016.exe';
+	end;
 
-  case ComboBox2.ItemIndex of
-  0:
-    begin
-      Hide := false;
-      Switch := '/download install.xml';
-    end;
-  1:
-    begin
-      Hide := true;
-      Switch := '/configure install.xml';
-    end;
-  end;
+	case TaskBox.ItemIndex of
+	0:
+		begin
+			Hide := false;
+			Switch := '/download install.xml';
+		end;
+	1:
+		begin
+			Hide := true;
+			Switch := '/configure install.xml';
+		end;
+	end;
 
-  Execute(Exec,Switch,'',Hide);
+	Execute(Exec,Switch,'',Hide);
 
 
 	Application.Minimize;
@@ -172,12 +173,12 @@ begin
 	Close;
 end;
 
-procedure TForm1.Button2Click(Sender: TObject);
+procedure TMainform.InstrBtnClick(Sender: TObject);
 begin
-  HelpForm.ShowModal;
+	HelpForm.ShowModal;
 end;
 
-procedure TForm1.AdjustCustomInstall;
+procedure TMainform.AdjustCustomInstall;
 var
 	idx : integer;
 	Cidx : integer;
@@ -187,14 +188,14 @@ begin
 	//Disable All
 	Prog := TStringList.Create;
 	Prog.Clear;
-	CheckListBox1.ItemIndex := -1;
-	for idx := 0 to CheckListBox1.Count -1 do
+	SoftwareList.ItemIndex := -1;
+	for idx := 0 to SoftwareList.Count -1 do
 	Begin
-		CheckListBox1.ItemEnabled[idx] := false;
-		CheckListBox1.Checked[idx] := false;
+		SoftwareList.ItemEnabled[idx] := false;
+		SoftwareList.Checked[idx] := false;
 	end;
 
-	case RadioGroup1.ItemIndex of
+	case VersionList.ItemIndex of
 	0: Prog.CommaText := 'Excel,OneNote,PowerPoint,Word';
 	1: Prog.CommaText := 'Excel,OneNote,Outlook,PowerPoint,Word';
 	2: Prog.CommaText := 'Access,Excel,OneNote,Outlook,PowerPoint,Publisher,Word';
@@ -226,11 +227,11 @@ begin
 
 	for idx := 0 to Prog.Count -1 do
 	begin
-		Cidx := CheckListBox1.Items.IndexOf(Prog[idx]);
+		Cidx := SoftwareList.Items.IndexOf(Prog[idx]);
 		if Cidx <> - 1 then
 		begin
-			CheckListBox1.Checked[Cidx] := true;
-			CheckListBox1.ItemEnabled[Cidx] := true;
+			SoftwareList.Checked[Cidx] := true;
+			SoftwareList.ItemEnabled[Cidx] := true;
 		end;
 	end;
 
@@ -238,29 +239,29 @@ begin
 
 end;
 
-procedure TForm1.CustomCheckClick(Sender: TObject);
+procedure TMainform.CustomCheckClick(Sender: TObject);
 begin
 	if (Self.CustomCheck.Checked = true) then
 	begin
-		CheckListbox1.Color := clWindow;
-		CheckListBox1.Enabled := true;
+		SoftwareList.Color := clWindow;
+		SoftwareList.Enabled := true;
 	end else
 	begin
-		CheckListBox1.Color := clBtnFace;
-		CheckListbox1.Enabled := False;
+		SoftwareList.Color := clBtnFace;
+		SoftwareList.Enabled := False;
 	end;
 	AdjustCustomInstall;
 end;
 
-procedure TForm1.FormCreate(Sender: TObject);
+procedure TMainform.FormCreate(Sender: TObject);
 begin
-	Left:=(Screen.Width-Width)  div 2;
-	Top:=(Screen.Height-Height) div 2;
+	Self.Position := poDesktopCenter;
 	AppPath := ExtractFilePath(ParamStr(0));
 	AdjustCustomInstall;
 end;
 
-procedure TForm1.RadioGroup1Click(Sender: TObject);
+//Updates custom install options
+procedure TMainform.VersionListClick(Sender: TObject);
 begin
 	AdjustCustomInstall;
 end;

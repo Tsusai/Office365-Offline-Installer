@@ -3,7 +3,7 @@ program Office365Offline;
 uses
   Forms,
   SysUtils,
-  Main in 'Main.pas' {Form1},
+  Main in 'Main.pas' {Mainform},
   Help in 'Help.pas' {Form2};
 
 {$R *.res}
@@ -11,7 +11,7 @@ uses
 begin
 	Application.Initialize;
 	Application.Title := 'Office 2013/365 Install Assistant';
-	Application.CreateForm(TForm1, Form1);
+	Application.CreateForm(TMainform, Mainform);
   Application.CreateForm(THelpForm, HelpForm);
-	Application.Run;
+  Application.Run;
 end.

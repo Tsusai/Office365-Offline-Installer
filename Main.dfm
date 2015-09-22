@@ -1,4 +1,4 @@
-object Form1: TForm1
+object Mainform: TMainform
   Left = 212
   Top = 185
   Caption = 'Office Offline Installer'
@@ -15,16 +15,16 @@ object Form1: TForm1
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
-  object Button1: TButton
+  object RunBtn: TButton
     Left = 8
     Top = 149
     Width = 89
     Height = 25
     Caption = 'Run'
     TabOrder = 0
-    OnClick = Button1Click
+    OnClick = RunBtnClick
   end
-  object RadioGroup1: TRadioGroup
+  object VersionList: TRadioGroup
     Left = 8
     Top = 6
     Width = 209
@@ -39,9 +39,9 @@ object Form1: TForm1
       'Office 365 Business'
       'Office 365 Small Business Premium')
     TabOrder = 1
-    OnClick = RadioGroup1Click
+    OnClick = VersionListClick
   end
-  object CheckListBox1: TCheckListBox
+  object SoftwareList: TCheckListBox
     Left = 223
     Top = 8
     Width = 138
@@ -71,7 +71,7 @@ object Form1: TForm1
     TabOrder = 3
     OnClick = CustomCheckClick
   end
-  object ComboBox1: TComboBox
+  object VerBox: TComboBox
     Left = 8
     Top = 126
     Width = 89
@@ -83,16 +83,16 @@ object Form1: TForm1
       'Office 2013'
       'Office 2016')
   end
-  object Button2: TButton
+  object InstrBtn: TButton
     Left = 296
     Top = 158
     Width = 65
     Height = 16
     Caption = 'Instructions'
     TabOrder = 5
-    OnClick = Button2Click
+    OnClick = InstrBtnClick
   end
-  object ComboBox2: TComboBox
+  object TaskBox: TComboBox
     Left = 103
     Top = 126
     Width = 114
