@@ -1,7 +1,7 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{36586440-455B-4FDA-BC53-36CE424E7B71}</ProjectGuid>
-        <MainSource>Office2013Setup.dpr</MainSource>
+        <MainSource>Office365Offline.dpr</MainSource>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Release</Config>
         <TargetedPlatforms>1</TargetedPlatforms>
