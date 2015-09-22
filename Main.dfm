@@ -1,8 +1,8 @@
 object Form1: TForm1
   Left = 212
   Top = 185
-  Caption = 'Office 2013/365 Installer'
-  ClientHeight = 157
+  Caption = 'Office Offline Installer'
+  ClientHeight = 182
   ClientWidth = 369
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -17,10 +17,10 @@ object Form1: TForm1
   TextHeight = 13
   object Button1: TButton
     Left = 8
-    Top = 127
-    Width = 97
+    Top = 149
+    Width = 89
     Height = 25
-    Caption = 'Install'
+    Caption = 'Run'
     TabOrder = 0
     OnClick = Button1Click
   end
@@ -32,12 +32,12 @@ object Form1: TForm1
     Caption = 'Version'
     ItemIndex = 0
     Items.Strings = (
-      'Office 2013 Home && Student'
-      'Office 2013 Home && Buisness'
-      'Office   365 Home Premium'
-      'Office   365 Pro Plus'
-      'Office   365 Buisness'
-      'Office   365 Small Buisness Premium')
+      'Office Home && Student'
+      'Office Home && Business'
+      'Office 365 Home Premium'
+      'Office 365 Pro Plus'
+      'Office 365 Business'
+      'Office 365 Small Business Premium')
     TabOrder = 1
     OnClick = RadioGroup1Click
   end
@@ -63,12 +63,45 @@ object Form1: TForm1
     TabOrder = 2
   end
   object CustomCheck: TCheckBox
-    Left = 111
-    Top = 131
+    Left = 103
+    Top = 153
     Width = 97
     Height = 17
     Caption = 'Customize Install'
     TabOrder = 3
     OnClick = CustomCheckClick
+  end
+  object ComboBox1: TComboBox
+    Left = 8
+    Top = 126
+    Width = 89
+    Height = 21
+    ItemIndex = 0
+    TabOrder = 4
+    Text = 'Office 2013'
+    Items.Strings = (
+      'Office 2013'
+      'Office 2016')
+  end
+  object Button2: TButton
+    Left = 296
+    Top = 158
+    Width = 65
+    Height = 16
+    Caption = 'Instructions'
+    TabOrder = 5
+    OnClick = Button2Click
+  end
+  object ComboBox2: TComboBox
+    Left = 103
+    Top = 126
+    Width = 114
+    Height = 21
+    ItemIndex = 0
+    TabOrder = 6
+    Text = 'Download'
+    Items.Strings = (
+      'Download'
+      'Install')
   end
 end

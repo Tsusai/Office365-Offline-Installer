@@ -5,11 +5,20 @@ This program uses a Microsoft Tool to create an offline (USB/DVD) install for Mi
 
 How to use:
 
-1. Download the Office Deployment Tool & place setup.exe into the Setup folder.
-2. Run Office2013Setup.exe with /download command switch (Office2013Setup.exe /download) (I'm working on a better solution atm.).
-3. The Setup.exe program will run and download necessary files.  It's a little over 1GB.
-4. Once Setup.exe has closed.  Run Office2013Setup.exe.
-5. Select the product you have.  Feel free to customize the install to exclude programs you do not want.
+*Obtain the 2013 Deployment tool from Microsoft here:
+  http://www.microsoft.com/en-us/download/details.aspx?id=36778
+
+*Obtain the 2016 Deployment tool from Microsoft here:
+  http://www.microsoft.com/en-us/download/details.aspx?id=49117
+
+*Run the 2013 tool to extract. Rename setup.exe to setup2013 and place into the setup folder
+
+*Run the 2016 tool to extract. Rename setup.exe to setup2016 and place into the setup folder
+
+*Using the GUI, select 2013 & Download, and click Run.  Repeat for 2016.
+  Note: "Custom Install" has no effect on Download.
+
+*Congradulations, you have an Offline Installer for Office!
 
 
 

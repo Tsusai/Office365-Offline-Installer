@@ -12,16 +12,19 @@ type
 		RadioGroup1: TRadioGroup;
 		CheckListBox1: TCheckListBox;
 		CustomCheck: TCheckBox;
+    ComboBox1: TComboBox;
+    Button2: TButton;
+    ComboBox2: TComboBox;
 		procedure Button1Click(Sender: TObject);
 		procedure FormCreate(Sender: TObject);
 		procedure CustomCheckClick(Sender: TObject);
 		procedure RadioGroup1Click(Sender: TObject);
+    procedure Button2Click(Sender: TObject);
 	private
 		{ Private declarations }
 	public
 		procedure AdjustCustomInstall;
-		procedure GenerateXML(Install : boolean);
-		procedure Download;
+		procedure GenerateXML;
 		{ Public declarations }
 	end;
 
@@ -30,6 +33,7 @@ var
 
 implementation
 uses
+  Help,
 	ShellAPI,
 	XMLIntf,
 	XmlDoc;
@@ -57,7 +61,7 @@ begin
 end;
 
 //Generates the configuration.xml
-procedure TForm1.GenerateXML(Install : boolean);
+procedure TForm1.GenerateXML;
 var
 	XML : IXMLDocument;
 	RootNode, CurNode, ProdNode : IXMLNode;
@@ -72,16 +76,13 @@ begin
 	ProdVersion := 'O365SmallBusPremRetail'; //Need a default for Download Mode
 	Exclude := '';
 
-	if Install then
-	begin
-		case RadioGroup1.ItemIndex of
-		0: ProdVersion := 'HomeStudentRetail';
-		1: ProdVersion := 'HomeBusinessRetail';
-		2: ProdVersion := 'O365HomePremRetail';
-		3: ProdVersion := 'O365ProPlusRetail';
-		4: ProdVersion := 'O365BusinessRetail';
-		5: ProdVersion := 'O365SmallBusPremRetail';
-		end;
+	case RadioGroup1.ItemIndex of
+	0: ProdVersion := 'HomeStudentRetail';
+	1: ProdVersion := 'HomeBusinessRetail';
+	2: ProdVersion := 'O365HomePremRetail';
+	3: ProdVersion := 'O365ProPlusRetail';
+	4: ProdVersion := 'O365BusinessRetail';
+	5: ProdVersion := 'O365SmallBusPremRetail';
 	end;
 
 
@@ -90,6 +91,11 @@ begin
 	XML.Options := [doNodeAutoIndent];
 	RootNode := XML.AddChild('Configuration');
 		CurNode := RootNode.AddChild('Add');
+
+    case ComboBox1.ItemIndex of
+    0: CurNode.Attributes['SourcePath'] := '.\2013';
+    1: CurNode.Attributes['SourcePath'] := '.\2016';
+    end;
 		CurNode.Attributes['OfficeClientEdition'] := '32';
 			ProdNode := CurNode.AddChild('Product');
 			//Product
@@ -98,7 +104,7 @@ begin
 				CurNode.Attributes['ID'] := 'en-US';
 
 				//Exclude App Section for custom install
-				if ((CustomCheck.Checked) and (Install)) then
+				if (CustomCheck.Checked) then
 				begin
 					for idx := 0 to CheckListBox1.Count-1 do
 					begin
@@ -130,24 +136,45 @@ begin
 
 end;
 
-procedure TForm1.Download;
-begin
-	SetCurrentDirectory(PChar(AppPath+'Setup\'));
-	GenerateXML(true);
-	Execute('setup.exe', '/download install.xml');
-	Application.Minimize;
-	Sleep(15000);
-	Application.Terminate;
-end;
-
 procedure TForm1.Button1Click(Sender: TObject);
+var
+  Exec : string;
+  Switch : string;
+  Hide : boolean;
 begin
 	SetCurrentDirectory(PChar(AppPath+'Setup\'));
-	GenerateXML(true);
-	Execute('setup.exe', '/configure install.xml','',true);
+	GenerateXML;
+  Hide := false;
+
+  case ComboBox1.ItemIndex of
+  0: Exec := 'setup2013.exe';
+  1: Exec := 'setup2016.exe';
+  end;
+
+  case ComboBox2.ItemIndex of
+  0:
+    begin
+      Hide := false;
+      Switch := '/download install.xml';
+    end;
+  1:
+    begin
+      Hide := true;
+      Switch := '/configure install.xml';
+    end;
+  end;
+
+  Execute(Exec,Switch,'',Hide);
+
+
 	Application.Minimize;
 	Sleep(15000);
 	Close;
+end;
+
+procedure TForm1.Button2Click(Sender: TObject);
+begin
+  HelpForm.ShowModal;
 end;
 
 procedure TForm1.AdjustCustomInstall;
@@ -231,12 +258,6 @@ begin
 	Top:=(Screen.Height-Height) div 2;
 	AppPath := ExtractFilePath(ParamStr(0));
 	AdjustCustomInstall;
-	if (FindCmdLineSwitch('download',true)) then
-	begin
-		ShowMessage('Download switch detected.  Downloading Latest Office 2013/365');
-		Download;
-	end;
-
 end;
 
 procedure TForm1.RadioGroup1Click(Sender: TObject);
