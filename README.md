@@ -1,7 +1,7 @@
-## Work-Office2013Installer
+## Tool-Office365-Offline-Installer
 ========================
 
-This program uses a Microsoft Tool to create an offline (USB/DVD) install for Microsoft Office 2013 & 365 "Click-To-Run" versions (Pretty much anything sold in the US that's a digital download or retail key only package).  The Microsoft Tool requires a configuration XML.  My program creates one to the users specification and simplifies the experience.
+This program uses a Microsoft Tool to create an offline (USB/DVD) install for Microsoft Office 2013/2016 & 365 "Click-To-Run" versions (Pretty much anything sold in the US that's a digital download or retail key only package).  The Microsoft Tool requires a configuration XML.  My program creates one to the users specification and simplifies the experience.
 
 How to use:
 
