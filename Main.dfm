@@ -76,6 +76,7 @@ object Mainform: TMainform
     Top = 126
     Width = 89
     Height = 21
+    Style = csDropDownList
     ItemIndex = 0
     TabOrder = 4
     Text = 'Office 2013'
@@ -97,6 +98,7 @@ object Mainform: TMainform
     Top = 126
     Width = 114
     Height = 21
+    Style = csDropDownList
     ItemIndex = 0
     TabOrder = 6
     Text = 'Download'

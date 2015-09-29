@@ -8,13 +8,13 @@ uses
 
 type
 	TMainform = class(TForm)
-    RunBtn: TButton;
-    VersionList: TRadioGroup;
-    SoftwareList: TCheckListBox;
+		RunBtn: TButton;
+		VersionList: TRadioGroup;
+		SoftwareList: TCheckListBox;
 		CustomCheck: TCheckBox;
 		VerBox: TComboBox;
-    InstrBtn: TButton;
-    TaskBox: TComboBox;
+		InstrBtn: TButton;
+		TaskBox: TComboBox;
 		procedure RunBtnClick(Sender: TObject);
 		procedure FormCreate(Sender: TObject);
 		procedure CustomCheckClick(Sender: TObject);
@@ -41,6 +41,7 @@ uses
 {$R *.dfm}
 var
 	AppPath : string = '';
+	CD : boolean;
 
 procedure Execute(
 	Command : string;
@@ -71,10 +72,12 @@ var
 	idx : Integer;
 
 	AFile : TextFile;
+	AFilePath : string;
 begin
 
 	ProdVersion := 'O365SmallBusPremRetail'; //Need a default for Download Mode
 	Exclude := '';
+	AFilePath := '';
 
 	case VersionList.ItemIndex of
 	0: ProdVersion := 'HomeStudentRetail';
@@ -94,8 +97,8 @@ begin
 		CurNode := RootNode.AddChild('Add');
 
 		case VerBox.ItemIndex of
-		0: CurNode.Attributes['SourcePath'] := '.\2013';
-		1: CurNode.Attributes['SourcePath'] := '.\2016';
+		0: CurNode.Attributes['SourcePath'] := AppPath+'Setup\2013\';
+		1: CurNode.Attributes['SourcePath'] := AppPath+'Setup\2016\';
 		end;
 		CurNode.Attributes['OfficeClientEdition'] := '32';
 			ProdNode := CurNode.AddChild('Product');
@@ -130,7 +133,10 @@ begin
 
 
 	//We don't need the XML Header.  Just dump the xml
-	AssignFile(AFile, 'install.xml');
+	AFilePath := 'msofficeinstall.xml';
+	if CD then AFilePath := GetEnvironmentVariable('TEMP')+'\msofficeinstall.xml';
+
+	AssignFile(AFile, AFilePath);
 	ReWrite(AFile);
 	Writeln(AFile,XML.DocumentElement.XML);
 	CloseFile(AFile);
@@ -152,19 +158,24 @@ begin
 	1: Exec := 'setup2016.exe';
 	end;
 
+	case CD of
+	true  : Switch := GetEnvironmentVariable('TEMP')+'\msofficeinstall.xml';
+	false : Switch := 'msofficeinstall.xml';
+	end;
+	Switch := '"'+Switch+'"';
+
 	case TaskBox.ItemIndex of
 	0:
 		begin
 			Hide := false;
-			Switch := '/download install.xml';
+			Switch := '/download ' + Switch;
 		end;
 	1:
 		begin
 			Hide := true;
-			Switch := '/configure install.xml';
+			Switch := '/configure ' + Switch;
 		end;
 	end;
-
 	Execute(Exec,Switch,'',Hide);
 
 
@@ -255,8 +266,10 @@ end;
 
 procedure TMainform.FormCreate(Sender: TObject);
 begin
+	CD := false;
 	Self.Position := poDesktopCenter;
 	AppPath := ExtractFilePath(ParamStr(0));
+	if Windows.GetDriveType(PChar(ExtractFileDrive(AppPath))) = 5{DRIVE_CDRIVE} then CD := true;
 	AdjustCustomInstall;
 end;
 
