@@ -246,7 +246,7 @@ begin
 		end;
 	end;
 
- Prog.Free;
+	Prog.Free;
 
 end;
 
