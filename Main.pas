@@ -8,18 +8,23 @@ uses
 
 type
 	TMainform = class(TForm)
-		RunBtn: TButton;
 		VersionList: TRadioGroup;
 		SoftwareList: TCheckListBox;
 		CustomCheck: TCheckBox;
 		VerBox: TComboBox;
 		InstrBtn: TButton;
 		TaskBox: TComboBox;
+		VerifyBtn: TButton;
+		UpdateBtn: TButton;
+		RunBtn: TButton;
+		Label1: TLabel;
 		procedure RunBtnClick(Sender: TObject);
 		procedure FormCreate(Sender: TObject);
 		procedure CustomCheckClick(Sender: TObject);
 		procedure VersionListClick(Sender: TObject);
 		procedure InstrBtnClick(Sender: TObject);
+		procedure VerifyBtnClick(Sender: TObject);
+		procedure FormClose(Sender: TObject; var Action: TCloseAction);
 	private
 		{ Private declarations }
 	public
@@ -30,20 +35,22 @@ type
 
 var
 	Mainform: TMainform;
+	AppPath : string = '';
+	tmpPath : string;
 
 implementation
 uses
 	Help,
+	Wait,
+	OfficeVerification,
 	ShellAPI,
 	XMLIntf,
+	IOUtils,
 	XmlDoc;
 
 {$R *.dfm}
-var
-	AppPath : string = '';
-	CD : boolean;
 
-procedure Execute(
+(*procedure Execute(
 	Command : string;
 	Params : string = '';
 	StartFolder : string = '';
@@ -59,6 +66,38 @@ begin
 		PChar(Params),
 		PChar(StartFolder),
 		i);
+end;*)
+
+procedure ExecuteAndWait(const aCommando: string);
+var
+	tmpStartupInfo: TStartupInfo;
+	tmpProcessInformation: TProcessInformation;
+	tmpProgram: String;
+begin
+	tmpProgram := trim(aCommando);
+	FillChar(tmpStartupInfo, SizeOf(tmpStartupInfo), 0);
+	with tmpStartupInfo do
+	begin
+		cb := SizeOf(TStartupInfo);
+		//wShowWindow := SW_HIDE;
+		wShowWindow := SW_NORMAL;
+	end;
+
+	if CreateProcess(nil, pchar(tmpProgram), nil, nil, true, CREATE_NO_WINDOW,
+		nil, nil, tmpStartupInfo, tmpProcessInformation) then
+	begin
+		// loop every 10 ms
+		while WaitForSingleObject(tmpProcessInformation.hProcess, 10) > 0 do
+		begin
+			Application.ProcessMessages;
+		end;
+		CloseHandle(tmpProcessInformation.hProcess);
+		CloseHandle(tmpProcessInformation.hThread);
+	end
+	else
+	begin
+		RaiseLastOSError;
+	end;
 end;
 
 //Generates the configuration.xml
@@ -73,19 +112,20 @@ var
 
 	AFile : TextFile;
 	AFilePath : string;
+	tmp : string;
 begin
 
 	ProdVersion := 'O365SmallBusPremRetail'; //Need a default for Download Mode
 	Exclude := '';
 	AFilePath := '';
+	tmp := '';
 
 	case VersionList.ItemIndex of
 	0: ProdVersion := 'HomeStudentRetail';
 	1: ProdVersion := 'HomeBusinessRetail';
 	2: ProdVersion := 'O365HomePremRetail';
 	3: ProdVersion := 'O365ProPlusRetail';
-	4: ProdVersion := 'O365BusinessRetail';
-	5: ProdVersion := 'O365SmallBusPremRetail';
+	4,5: ProdVersion := 'O365BusinessRetail';
 	end;
 
 
@@ -124,17 +164,33 @@ begin
 						end;
 					end;
 				end;
+			if VersionList.ItemIndex = 5 then
+			begin
+				CurNode := XML.DocumentElement.ChildNodes['Add'];
+				ProdNode := CurNode.AddChild('Product');
+				case VerBox.ItemIndex of
+				0: ProdNode.Attributes['ID'] := 'LyncRetail'; //2013
+				1: ProdNode.Attributes['ID'] := 'SkypeforBusinessRetail'; //2016
+				end;
+
+				CurNode := ProdNode.AddChild('Language');
+				CurNode.Attributes['ID'] := 'en-US';
+			end;
 		//Extra common goodies
 		CurNode := RootNode.AddChild('Display');
 		CurNode.Attributes['AcceptEULA'] := 'TRUE';
 		CurNode := RootNode.AddChild('Property');
 		CurNode.Attributes['Name'] := 'AutoActivate';
 		CurNode.Attributes['Value'] := '1';
+		CurNode := RootNode.AddChild('Logging');
+		CurNode.Attributes['Type'] := 'Standard';
+		DateTimeToString(tmp,'log-hhmmss',Now);
+		CurNode.Attributes['Path'] := tmpPath;
+		CurNode.Attributes['Template'] := 'O365Offline(*).txt';
 
 
 	//We don't need the XML Header.  Just dump the xml
-	AFilePath := 'msofficeinstall.xml';
-	if CD then AFilePath := GetEnvironmentVariable('TEMP')+'\msofficeinstall.xml';
+	AFilePath := tmpPath + 'msofficeinstall.xml';
 
 	AssignFile(AFile, AFilePath);
 	ReWrite(AFile);
@@ -147,41 +203,53 @@ procedure TMainform.RunBtnClick(Sender: TObject);
 var
 	Exec : string;
 	Switch : string;
-	Hide : boolean;
 begin
+	if TaskBox.ItemIndex = 0 then exit;
+
+	(*if (TaskBox.ItemIndex = 2) and
+	(Verbox.ItemIndex = 0) and
+	(VersionList.ItemIndex = 5) then
+	begin
+		ShowMessage('365 Business + Skype is untested for Office 2013.');
+		Exit;
+	end;*)
+
+
 	SetCurrentDirectory(PChar(AppPath+'Setup\'));
 	GenerateXML;
-	Hide := false;
 
 	case VerBox.ItemIndex of
 	0: Exec := 'setup2013.exe';
 	1: Exec := 'setup2016.exe';
 	end;
 
-	case CD of
-	true  : Switch := GetEnvironmentVariable('TEMP')+'\msofficeinstall.xml';
-	false : Switch := 'msofficeinstall.xml';
-	end;
-	Switch := '"'+Switch+'"';
+//	Switch := '"' + tmpPath + 'msofficeinstall.xml"';
 
+	{case TaskBox.ItemIndex of
+	1:Switch := '/download ' + Switch;
+	2:Switch := '/configure ' + Switch;
+	end;}
 	case TaskBox.ItemIndex of
-	0:
-		begin
-			Hide := false;
-			Switch := '/download ' + Switch;
-		end;
-	1:
-		begin
-			Hide := true;
-			Switch := '/configure ' + Switch;
-		end;
+	1:Switch := '/download';
+	2:Switch := '/configure';
 	end;
-	Execute(Exec,Switch,'',Hide);
 
+	WaitForm.Show;
+	Application.ProcessMessages;
+	Sleep(1000);
 
-	Application.Minimize;
-	Sleep(15000);
-	Close;
+	MainForm.Enabled := false;
+	(*ExecuteAndWait(
+		Format('%s %s %smsofficeinstall.xml',[Exec,Switch,tmpPath])
+	);*)
+	Sleep(10000);
+	WaitForm.Close;
+	MainForm.Enabled := true;
+	MainForm.BringToFront;
+	//Execute(Exec,Switch,'',Hide);
+	//Application.Minimize;
+	//Sleep(15000);
+	//Close;
 end;
 
 procedure TMainform.InstrBtnClick(Sender: TObject);
@@ -211,8 +279,7 @@ begin
 	1: Prog.CommaText := 'Excel,OneNote,Outlook,PowerPoint,Word';
 	2: Prog.CommaText := 'Access,Excel,OneNote,Outlook,PowerPoint,Publisher,Word';
 	3: Prog.CommaText := 'Access,Excel,InfoPath,Lync,OneNote,Outlook,PowerPoint,Publisher,Word,OneDrive';
-	4: Prog.CommaText := 'Excel,OneNote,Outlook,PowerPoint,Publisher,Word,OneDrive';
-	5: Prog.CommaText := 'Access,Excel,InfoPath,Lync,OneNote,Outlook,PowerPoint,Publisher,Word,OneDrive';
+	4,5: Prog.CommaText := 'Excel,OneNote,Outlook,PowerPoint,Publisher,Word,OneDrive';
 	end;
 
 	//Yes, Number searching is nanoseconds faster, however with Microsoft coming up
@@ -250,6 +317,12 @@ begin
 
 end;
 
+procedure TMainform.VerifyBtnClick(Sender: TObject);
+begin
+	VerifyOfficeData(2013);
+	VerifyOfficeData(2016);
+end;
+
 procedure TMainform.CustomCheckClick(Sender: TObject);
 begin
 	if (Self.CustomCheck.Checked = true) then
@@ -264,13 +337,41 @@ begin
 	AdjustCustomInstall;
 end;
 
+procedure TMainform.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+	TDirectory.Delete(tmpPath,true);
+end;
+
+function GetAppVersionStr: string;
+var
+	Exe: string;
+	Size, Handle: DWORD;
+	Buffer: TBytes;
+	FixedPtr: PVSFixedFileInfo;
+begin
+	Exe := ParamStr(0);
+	Size := GetFileVersionInfoSize(PChar(Exe), Handle);
+	if Size = 0 then
+		RaiseLastOSError;
+	SetLength(Buffer, Size);
+	if not GetFileVersionInfo(PChar(Exe), Handle, Size, Buffer) then
+		RaiseLastOSError;
+	if not VerQueryValue(Buffer, '\', Pointer(FixedPtr), Size) then
+		RaiseLastOSError;
+	Result := Format(' %d.%d.%d.%d',
+		[LongRec(FixedPtr.dwFileVersionMS).Hi,  //major
+		 LongRec(FixedPtr.dwFileVersionMS).Lo,  //minor
+		 LongRec(FixedPtr.dwFileVersionLS).Hi,  //release
+		 LongRec(FixedPtr.dwFileVersionLS).Lo]) //build
+end;
+
 procedure TMainform.FormCreate(Sender: TObject);
 begin
-	CD := false;
-	Self.Position := poDesktopCenter;
 	AppPath := ExtractFilePath(ParamStr(0));
-	if Windows.GetDriveType(PChar(ExtractFileDrive(AppPath))) = 5{DRIVE_CDRIVE} then CD := true;
+	tmpPath := TPath.GetTempPath + 'O365OfflineTmp\';
+	ForceDirectories(tmpPath);
 	AdjustCustomInstall;
+	Caption := Application.Title + GetAppVersionStr;
 end;
 
 //Updates custom install options

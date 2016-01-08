@@ -1,9 +1,10 @@
 object Mainform: TMainform
   Left = 212
   Top = 185
+  BorderIcons = [biSystemMenu, biMinimize, biHelp]
   Caption = 'Office Offline Installer'
-  ClientHeight = 182
-  ClientWidth = 369
+  ClientHeight = 177
+  ClientWidth = 507
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -11,41 +12,47 @@ object Mainform: TMainform
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  Position = poScreenCenter
   Scaled = False
+  OnClose = FormClose
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
-  object RunBtn: TButton
-    Left = 8
-    Top = 149
-    Width = 89
-    Height = 25
-    Caption = 'Run'
-    TabOrder = 0
-    OnClick = RunBtnClick
+  object Label1: TLabel
+    Left = 303
+    Top = 156
+    Width = 213
+    Height = 13
+    Caption = #169' 2016 Tsusai (http://github.com/tsusai)     '
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = [fsItalic]
+    ParentFont = False
   end
   object VersionList: TRadioGroup
     Left = 8
-    Top = 6
+    Top = 32
     Width = 209
     Height = 115
     Caption = 'Version'
     ItemIndex = 0
     Items.Strings = (
-      'Office Home && Student'
-      'Office Home && Business'
-      'Office 365 Home Premium'
-      'Office 365 Pro Plus'
-      'Office 365 Business'
-      'Office 365 Small Business Premium')
-    TabOrder = 1
+      'Home && Student'
+      'Home && Business'
+      '365 Home Premium'
+      '365 Pro Plus'
+      '365 Business (&& Premium)'
+      '365 Business + Skype (Full Premium)')
+    TabOrder = 0
     OnClick = VersionListClick
   end
   object SoftwareList: TCheckListBox
     Left = 223
     Top = 8
     Width = 138
-    Height = 144
+    Height = 139
     Color = clBtnFace
     Enabled = False
     ItemHeight = 13
@@ -60,50 +67,78 @@ object Mainform: TMainform
       'OneDrive'
       'InfoPath'
       'Lync')
-    TabOrder = 2
+    TabOrder = 1
   end
   object CustomCheck: TCheckBox
-    Left = 103
-    Top = 153
-    Width = 97
+    Left = 369
+    Top = 39
+    Width = 98
     Height = 17
     Caption = 'Customize Install'
-    TabOrder = 3
+    TabOrder = 2
     OnClick = CustomCheckClick
   end
   object VerBox: TComboBox
-    Left = 8
-    Top = 126
+    Left = 128
+    Top = 8
     Width = 89
     Height = 21
     Style = csDropDownList
-    ItemIndex = 0
-    TabOrder = 4
-    Text = 'Office 2013'
+    ItemIndex = 1
+    TabOrder = 3
+    Text = 'Office 2016'
     Items.Strings = (
       'Office 2013'
       'Office 2016')
   end
   object InstrBtn: TButton
-    Left = 296
-    Top = 158
-    Width = 65
-    Height = 16
-    Caption = 'Instructions'
-    TabOrder = 5
+    Left = 369
+    Top = 124
+    Width = 130
+    Height = 25
+    Caption = 'Instructions / About'
+    TabOrder = 4
     OnClick = InstrBtnClick
   end
   object TaskBox: TComboBox
-    Left = 103
-    Top = 126
+    Left = 8
+    Top = 8
     Width = 114
     Height = 21
     Style = csDropDownList
     ItemIndex = 0
-    TabOrder = 6
-    Text = 'Download'
+    TabOrder = 5
+    Text = '(Select an Option)'
     Items.Strings = (
+      '(Select an Option)'
       'Download'
       'Install')
+  end
+  object VerifyBtn: TButton
+    Left = 369
+    Top = 93
+    Width = 130
+    Height = 25
+    Caption = 'Verify Office Files'
+    TabOrder = 6
+    OnClick = VerifyBtnClick
+  end
+  object UpdateBtn: TButton
+    Left = 369
+    Top = 62
+    Width = 130
+    Height = 25
+    Caption = 'Check for Office Update'
+    Enabled = False
+    TabOrder = 7
+  end
+  object RunBtn: TButton
+    Left = 369
+    Top = 8
+    Width = 130
+    Height = 25
+    Caption = 'Launch Configured Setup'
+    TabOrder = 8
+    OnClick = RunBtnClick
   end
 end

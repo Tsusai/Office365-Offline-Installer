@@ -3,7 +3,7 @@ object HelpForm: THelpForm
   Top = 0
   BorderStyle = bsDialog
   Caption = 'Instructions'
-  ClientHeight = 213
+  ClientHeight = 254
   ClientWidth = 499
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -15,14 +15,14 @@ object HelpForm: THelpForm
   OnCreate = FormCreate
   DesignSize = (
     499
-    213)
+    254)
   PixelsPerInch = 96
   TextHeight = 13
   object Memo1: TMemo
     Left = 8
     Top = 8
     Width = 482
-    Height = 197
+    Height = 238
     Anchors = [akLeft, akTop, akRight, akBottom]
     BorderStyle = bsNone
     Color = clBtnFace
@@ -46,8 +46,17 @@ object HelpForm: THelpForm
         'or 2016.'
       '  Note: "Custom Install" has no effect on Download.'
       ''
-      '*Congradulations, you have an Offline Installer for Office!')
+      '*Congradulations, you have an Offline Installer for Office!'
+      ''
+      '3rd Party Code:'
+      
+        'Project JEDI @ http://www.delphi-jedi.org/ [CAB file manipulatio' +
+        'n]'
+      
+        'Turbo LockBox 3 @ http://sourceforge.net/projects/tplockbox/ [SH' +
+        'A256 hashing utility]')
     ReadOnly = True
     TabOrder = 0
+    ExplicitHeight = 197
   end
 end
