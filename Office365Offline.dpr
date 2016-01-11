@@ -12,7 +12,7 @@ uses
 
 begin
 	Application.Initialize;
-	Application.Title := 'Office 2013/365 Install Assistant';
+	Application.Title := '';
 	Application.CreateForm(TMainform, Mainform);
 	Application.CreateForm(THelpForm, HelpForm);
 	Application.CreateForm(TWaitForm, WaitForm);

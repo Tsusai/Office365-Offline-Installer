@@ -83,7 +83,8 @@ begin
 		wShowWindow := SW_NORMAL;
 	end;
 
-	if CreateProcess(nil, pchar(tmpProgram), nil, nil, true, CREATE_NO_WINDOW,
+  //Probably helpful if I don't hide the damn office.
+	if CreateProcess(nil, pchar(tmpProgram), nil, nil, true, NORMAL_PRIORITY_CLASS{CREATE_NO_WINDOW},
 		nil, nil, tmpStartupInfo, tmpProcessInformation) then
 	begin
 		// loop every 10 ms
@@ -239,10 +240,10 @@ begin
 	Sleep(1000);
 
 	MainForm.Enabled := false;
-	(*ExecuteAndWait(
+	ExecuteAndWait(
 		Format('%s %s %smsofficeinstall.xml',[Exec,Switch,tmpPath])
-	);*)
-	Sleep(10000);
+	);
+	//Sleep(10000);
 	WaitForm.Close;
 	MainForm.Enabled := true;
 	MainForm.BringToFront;
@@ -371,7 +372,8 @@ begin
 	tmpPath := TPath.GetTempPath + 'O365OfflineTmp\';
 	ForceDirectories(tmpPath);
 	AdjustCustomInstall;
-	Caption := Application.Title + GetAppVersionStr;
+	Caption := Caption + GetAppVersionStr;
+  Application.Title := Caption;
 end;
 
 //Updates custom install options
