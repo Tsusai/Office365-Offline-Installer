@@ -33,10 +33,16 @@ type
 		{ Public declarations }
 	end;
 
+type
+	TConfigINI = record
+		XML_Lang : string;
+	end;
+
 var
 	Mainform: TMainform;
 	AppPath : string = '';
 	tmpPath : string;
+	ConfigINI : TConfigINI;
 
 implementation
 uses
@@ -46,6 +52,7 @@ uses
 	ShellAPI,
 	XMLIntf,
 	IOUtils,
+	IniFiles,
 	XmlDoc;
 
 {$R *.dfm}
@@ -146,7 +153,7 @@ begin
 			//Product
 			ProdNode.Attributes['ID'] := ProdVersion;
 				CurNode := ProdNode.AddChild('Language');
-				CurNode.Attributes['ID'] := 'en-US';
+				CurNode.Attributes['ID'] := ConfigINI.XML_Lang;
 
 				//Exclude App Section for custom install
 				if (CustomCheck.Checked) then
@@ -175,7 +182,7 @@ begin
 				end;
 
 				CurNode := ProdNode.AddChild('Language');
-				CurNode.Attributes['ID'] := 'en-US';
+				CurNode.Attributes['ID'] := ConfigINI.XML_Lang;
 			end;
 		//Extra common goodies
 		CurNode := RootNode.AddChild('Display');
@@ -339,8 +346,16 @@ begin
 end;
 
 procedure TMainform.FormClose(Sender: TObject; var Action: TCloseAction);
+var
+	iniFile : TIniFile;
 begin
 	TDirectory.Delete(tmpPath,true);
+	iniFile := TIniFile.Create(ChangeFileExt(Application.ExeName,'.ini'));
+	try
+		iniFile.WriteString('XML','LanguageCode',ConfigINI.XML_Lang);
+	finally
+		iniFile.Free;
+	end;
 end;
 
 function GetAppVersionStr: string;
@@ -367,13 +382,21 @@ begin
 end;
 
 procedure TMainform.FormCreate(Sender: TObject);
+var
+	iniFile : TIniFile;
 begin
 	AppPath := ExtractFilePath(ParamStr(0));
 	tmpPath := TPath.GetTempPath + 'O365OfflineTmp\';
 	ForceDirectories(tmpPath);
 	AdjustCustomInstall;
 	Caption := Caption + GetAppVersionStr;
-  Application.Title := Caption;
+	Application.Title := Caption;
+	iniFile := TIniFile.Create(ChangeFileExt(Application.ExeName,'.ini'));
+	try
+		ConfigINI.XML_Lang := iniFile.ReadString('XML','LanguageCode','en-US');
+	finally
+		iniFile.Free;
+	end;
 end;
 
 //Updates custom install options

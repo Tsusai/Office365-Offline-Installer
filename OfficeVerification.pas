@@ -1,31 +1,90 @@
 unit OfficeVerification;
 
 interface
+
+uses
+	Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+	Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls;
+
+type
+	TVerifyForm = class(TForm)
+		OutputBox: TMemo;
+		CloseBtn: TButton;
+		procedure CloseBtnClick(Sender: TObject);
+    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+	private
+		{ Private declarations }
+	public
+		{ Public declarations }
+		procedure MsgNewLine(s : string);
+		procedure MsgAppLine(s : string);
+	end;
+
 	procedure VerifyOfficeData(Year : integer);
+	function ReadVersion(aCABfile : string) : string;
+
+var
+	VerifyForm: TVerifyForm;
 
 implementation
+
+{$R *.dfm}
+
 uses
 	Main,
 	JvCabFile,
-	Classes,
-	SysUtils,
 	XMLIntf,
 	XmlDoc,
 	uTPLb_Hash,
 	uTPLb_CryptographicLibrary,
-	uTPLb_StreamUtils,
-	Dialogs;
+	uTPLb_StreamUtils;
+
+var
+	Passed : boolean;
+
+procedure TVerifyForm.MsgNewLine(s : string);
+begin
+	OutputBox.Lines.Add(s);
+end;
+
+procedure TVerifyForm.CloseBtnClick(Sender: TObject);
+begin
+	Self.Close;
+end;
+
+procedure TVerifyForm.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+begin
+  CanClose := Passed;
+end;
+
+procedure TVerifyForm.MsgAppLine(s : string);
+begin
+	OutputBox.Lines.Strings[OutputBox.Lines.Count-1] :=
+		OutputBox.Lines.Strings[OutputBox.Lines.Count-1] + s;
+end;
 
 function CheckFile(f : string) : boolean;
 begin
+	VerifyForm.MsgNewLine(
+		Format('Checking for %s: File ',
+		[  StringReplace(f,AppPath,'',[rfReplaceAll])  ]
+		)
+	);
 	Result := FileExists(f);
-	if Not Result then ShowMessage(f+' Missing, redownload');
+	if Not Result then VerifyForm.MsgAppLine('Missing, Please Re-Download') else
+		VerifyForm.MsgAppLine('Found');
 end;
 
 function CheckFolder(p : string) : boolean;
 begin
+	VerifyForm.MsgNewLine(
+		Format('Checking for %s: Folder ',
+		[  StringReplace(p,AppPath,'',[rfReplaceAll])  ]
+		)
+	);
 	Result := DirectoryExists(p);
-	if Not Result then ShowMessage('Folder ' + p + ' Missing, redownload');
+	if Not Result then VerifyForm.MsgAppLine('Missing, Please Re-Download') else
+		VerifyForm.MsgAppLine('Found');
 end;
 
 function Hash_GrabHash(
@@ -49,6 +108,10 @@ end;
 function Hash_VerifyHash(const Hash1, Hash2 : string) : boolean;
 begin
 	Result := (CompareText(Hash1,Hash2) = 0);
+	case Result of
+		true:  VerifyForm.MsgAppLine('Complete');
+		false: VerifyForm.MsgAppLine('Failure');
+	end;
 end;
 
 function Hash_SHA256(
@@ -76,7 +139,7 @@ begin
 		Sz := SHA256.HashOutputValue.Size;
 		if Sz <> 32 then
 		begin
-			ShowMessage('Something went bad with with file hashing, no idea why' + f);
+			VerifyForm.MsgAppLine('Failure (Hash Length Issue)');
 			Exit;
 		end;
 		SHA256.HashOutputValue.Position := 0;
@@ -92,155 +155,156 @@ begin
 		Crypto.Free;
 		SHA256.Free;
 	end;
-
 end;
 
-function S1_ReadXMLVersion(
-	var I320Hash : string;
-	var I640Hash : string;
-	var Ver : string;
-	const Year : integer;
-	const VDXML : string
-) : boolean;
+function ReadVersion(aCABfile : string) : string;
 var
+	CAB : TJvCABFile;
 	XML: IXMLDocument;
 	ANode : IXMLNode;
 begin
-	Result := false;
-	I320Hash := '';
-	I640Hash := '';
-	ver := '';
+	CAB := TJvCABFile.Create(nil);
+	Result := '';
 	try
-		XML := LoadXMLDocument(VDXML);
-		ANode := XML.DocumentElement.ChildNodes['Available'];
-		ver := ANode.Attributes['Build'];
-		case Year of
-		2013: Result := (ver <> '');
-		2016:
-			begin
-				I320Hash := ANode.Attributes['I320Hash'];
-				I640Hash := ANode.Attributes['I640Hash'];
-				Result := (ver <> '') AND (I320Hash <> '') AND (I640Hash <> '');
-			end;
+		VerifyForm.MsgNewLine('Extracting VersionDescriptor.xml');
+		CAB.FileName := ACABfile;
+		CAB.ExtractFile('VersionDescriptor.xml',tmpPath);
+		if CheckFile(tmpPath+'VersionDescriptor.xml') then
+		begin
+			XML := LoadXMLDocument(tmpPath+'VersionDescriptor.xml');
+			ANode := XML.DocumentElement.ChildNodes['Available'];
+			Result := ANode.Attributes['Build'];
+			if Result <> '' then VerifyForm.MsgNewLine('Version Identified') else
+			VerifyForm.MsgNewLine('Could not read Office version');
 		end;
 	finally
-		if not Result then ShowMessage('Could not read '+VDXML);
+		CAB.Free;
 	end;
 end;
 
-function S2_CheckFilesExist(
+function S1_CheckFilesExist(
 	const Year : integer;
 	const DataPath : string;
 	const ver : string
 ) : boolean;
 begin
 	Result := false;
-	if not CheckFile(DataPath + 'Office\Data\v32_'+ver+'.cab') then Exit;
-	if not CheckFolder(DataPath + 'Office\Data\'+ver) then Exit;
-	if not CheckFile(DataPath + 'Office\Data\'+ver+'\i321033.cab') then Exit;
-	if not CheckFile(DataPath + 'Office\Data\'+ver+'\i641033.cab') then Exit;
-	if not CheckFile(DataPath + 'Office\Data\'+ver+'\s320.cab') then Exit;
-	if not CheckFile(DataPath + 'Office\Data\'+ver+'\s321033.cab') then Exit;
-	if not CheckFile(DataPath + 'Office\Data\'+ver+'\stream.x86.en-us.dat') then Exit;
-	if not CheckFile(DataPath + 'Office\Data\'+ver+'\stream.x86.x-none.dat') then Exit;
-	if Year = 2016 then
-	begin
-		if not CheckFile(DataPath + 'Office\Data\'+ver+'\i320.cab') then Exit;
-		if not CheckFile(DataPath + 'Office\Data\'+ver+'\i640.cab') then Exit;
-  end;
-
+	if not CheckFile(DataPath + 'v32_'+ver+'.cab') then Exit;
+	if not CheckFolder(DataPath + ver) then Exit;
+	if not CheckFile(DataPath + ver +'\i321033.cab') then Exit;
+	if not CheckFile(DataPath + ver +'\i641033.cab') then Exit;
+	if not CheckFile(DataPath + ver +'\s320.cab') then Exit;
+	if not CheckFile(DataPath + ver +'\s321033.cab') then Exit;
+	if not CheckFile(Format('%s%s\stream.x86.%s.dat',[DataPath,Ver,ConfigINI.XML_Lang])) then Exit;
+	if not CheckFile(DataPath + ver +'\stream.x86.x-none.dat') then Exit;
+	case Year of
+	2016:
+		begin
+			if not CheckFile(DataPath + ver+'\i320.cab') then Exit;
+			if not CheckFile(DataPath + ver+'\i640.cab') then Exit;
+		end;
+	end;
 	//Holy Crap we made it.
 	Result := true;
 end;
 
+function S2_ReadXML2016Hashes(
+	//const aCABfile : string; Already Extracted
+	var I320Hash : string;
+	var I640Hash : string//;
+) : boolean;
+var
+	XML: IXMLDocument;
+	ANode : IXMLNode;
+begin
+	VerifyForm.MsgNewLine('Begin Reading Office 2016 i320 & i640 Hashes: ');
+	Result := false;
+	I320Hash := '';
+	I640Hash := '';
+//	CAB := TJvCABFile.Create(nil);
+	try
+		//CAB.FileName := ACABfile;
+		//CAB.ExtractFile('VersionDescriptor.xml',tmpPath);
+		XML := LoadXMLDocument(tmpPath+'VersionDescriptor.xml');
+		ANode := XML.DocumentElement.ChildNodes['Available'];
+		I320Hash := ANode.Attributes['I320Hash'];
+		I640Hash := ANode.Attributes['I640Hash'];
+		Result := (I320Hash <> '') AND (I640Hash <> '');
+	finally
+		//CAB.Free;
+		//Fix this, this is so fucking lame.
+		case Result of
+		true:  VerifyForm.MsgAppLine('Complete');
+		false: VerifyForm.MsgAppLine('Failure');
+		end;
+	end;
+end;
+
 function S3_Verify2016Hashes(
-	const CABFILE : TJvCABFile;
 	const I320Hash : string;
 	const I640Hash : string;
-	const DPath : string;
-	const Ver : string
+	const SourcePath : string
 ) : boolean;
 var
-	SourcePath : string;
+	CAB : TJvCABFile;
 begin
-	Result := false;
-	SourcePath := (DPath + 'Office\Data\'+ver+'\');
+	Result := true; //presume true
+	CAB := TJvCABFile.Create(nil);
 	try
-		CABFile.FileName := SourcePath+'i320.cab';
-		CABFile.ExtractFile('i320.hash',tmpPath);
-	except
-		ShowMessage('Could not open '+SourcePath+'i320.cab');
-		CABFile.Free;
-		Exit;
-	end;
-	try
-		CABFile.FileName := SourcePath + 'i640.cab';
-		CABFile.ExtractFile('i640.hash',tmpPath);
-	except
-		ShowMessage('Could not open '+ SourcePath+ 'i640.cab');
-		CABFile.Free;
-		Exit;
+		CAB.FileName := SourcePath+'i320.cab';
+		CAB.ExtractFile('i320.hash',tmpPath);
+		if not CheckFile(tmpPath+'i320.hash') then
+		begin
+			result := false;
+			exit;
+		end;
+
+		CAB.FileName := SourcePath + 'i640.cab';
+		CAB.ExtractFile('i640.hash',tmpPath);
+		if not CheckFile(tmpPath+'i640.hash') then
+		begin
+			VerifyForm.MsgNewLine('Could not extract i640.hash');
+			result := false;
+			exit;
+		end;
+	finally
+		CAB.Free;
 	end;
 
-	if not Hash_VerifyHash(i320Hash,Hash_GrabHash(tmpPath+'i320.Hash')) then
-	begin
-		ShowMessage('Could not verify hash for '+tmpPath+'i320.Hash');
-		exit;
-	end;
-	if not Hash_VerifyHash(i640Hash,Hash_GrabHash(tmpPath+'i640.Hash')) then
-	begin
-		ShowMessage('Could not verify hash for '+tmpPath+'i640.Hash');
-		exit;
-	end;
-  Result := True;
+	if not result then exit;
+	Result := false; //now we presume false;
+
+	VerifyForm.MsgNewLine('Verifying i320 Hash: ');
+	if not Hash_VerifyHash(i320Hash,Hash_GrabHash(tmpPath+'i320.Hash')) then exit;
+	VerifyForm.MsgNewLine('Verifying i640 Hash: ');
+	if not Hash_VerifyHash(i640Hash,Hash_GrabHash(tmpPath+'i640.Hash')) then exit;
+	Result := True;
 end;
 
-function S4_VerifyLStreamHash(
-	const CABFILE : TJvCABFile;
-	const DPath : string;
-	const Ver : string
-) : boolean;
+function S4_VerifyStreamHash(
+	const SourcePath : string;
+	const CABFile : string;
+	const StreamName : string
+	) : boolean;
 var
-	SourcePath : string;
+	CAB : TJvCabFile;
 	sourceLocalHash : string;
 	FileHash : string;
 begin
 	Result := false;
+	CAB := TJvCabFile.Create(nil);
 	try
-		SourcePath := (DPath + 'Office\Data\'+ver+'\');
-		CABFile.FileName := SourcePath + 's321033.cab';
-		CABFile.ExtractFile('stream.x86.en-us.hash',tmpPath);
-		sourceLocalHash := Hash_GrabHash(tmpPath+'stream.x86.en-us.hash');
-		FileHash := Hash_SHA256(SourcePath + 'stream.x86.en-us.dat');
+		CAB.FileName := SourcePath + CABFile;
+		CAB.ExtractFile(StreamName+'.hash',tmpPath);
+		CheckFile(tmpPath+StreamName+'.hash');
+		sourceLocalHash := Hash_GrabHash(tmpPath+StreamName+'.hash');
+		VerifyForm.MsgNewLine('Hashing ' + StreamName+'.dat: ');
+		FileHash := Hash_SHA256(SourcePath + StreamName+'.dat');
 		if FileHash = '' then exit;
-		Result := Hash_VerifyHash(sourceLocalHash,FileHash);
-  finally
-		if not Result then ShowMessage('Failed to verify stream.x86.en-us.dat');
-	end;
-
-end;
-
-function S5_VerifyUStreamHash(
-	const CABFILE : TJvCABFile;
-	const DPath : string;
-	const Ver : string
-) : boolean;
-var
-	SourcePath : string;
-	sourceLocalHash : string;
-	FileHash : string;
-begin
-	Result := false;
-	try
-		SourcePath := (DPath + 'Office\Data\'+ver+'\');
-		CABFile.FileName := SourcePath + 's320.cab';
-		CABFile.ExtractFile('stream.x86.x-none.hash',tmpPath);
-		sourceLocalHash := Hash_GrabHash(tmpPath+'stream.x86.x-none.hash');
-		FileHash := Hash_SHA256(SourcePath + 'stream.x86.x-none.dat');
-		if FileHash = '' then exit;
+		VerifyForm.MsgAppLine('Hashed, Comparing: ');
 		Result := Hash_VerifyHash(sourceLocalHash,FileHash);
 	finally
-		if not Result then ShowMessage('Failed to verify stream.x86.x-none.dat');
+		CAB.Free;
 	end;
 end;
 
@@ -248,8 +312,6 @@ end;
 //CANNOT VERIFY 2013 AT THIS TIME. Leaving code multi-year for future changes
 procedure VerifyOfficeData(Year : integer);
 var
-	CABFile : TJvCABFile;
-	i : integer;
 	ver : string;
 	DataPath : string;
 	I320Hash : string;
@@ -259,32 +321,23 @@ begin
 	DataPath := '';
 	I320Hash := '';
 	I640Hash := '';
+	Passed := false;
 	DataPath := Format('%sSetup\%d\',[AppPath,Year]);
-
-	//Check if v32.cab exists (Starting point of verification)
-	if not CheckFile(DataPath + 'Office\Data\v32.cab') then exit;
-
-	CABFile := TJvCABFile.Create(nil);
-	try
-		CABFile.FileName := DataPath + 'Office\Data\v32.cab';
-	except
-		ShowMessage('Could not open '+ DataPath + 'Office\Data\v32.cab');
-		CABFile.Free;
-		Exit;
-	end;
-	//ShowMessage('File Count: ' + IntToStr(i));
-	CABFile.ExtractFile('VersionDescriptor.xml',tmpPath);
-	for I := 0 to 0 do //run once? lol
+	VerifyForm.Show;
+	while not Passed do
 	begin
+		VerifyForm.MsgNewLine('Starting verification of Office '+ IntToStr(Year));
 
-		//Get a Build #
-		if not S1_ReadXMLVersion(
-			I320Hash,I640Hash,Ver,
-			Year,tmpPath+'VersionDescriptor.xml'
-		) then break;
+		//Check Files existance (Starting point of verification)
+		if not CheckFile(Format('%sSetup\setup%d.exe',[AppPath,Year])) then exit;
+		if not CheckFile(DataPath + 'Office\Data\v32.cab') then Exit;
+		//Get our Version
+		ver := ReadVersion(DataPath + 'Office\Data\v32.cab');
 
-		//Verify files exists in that version's folder
-		if not S2_CheckFilesExist(Year,DataPath,ver) then break;
+		if not S1_CheckFilesExist(Year, DataPath + 'Office\Data\',ver) then break;
+
+		//That's it for 2013 atm
+
 
 (*                      .. ......~~?$+ZZ+~,,.:==?~,...... ..
                      . ..~+$DDD8NDDDDNN88ND8N8DDDDZZ?~:+....
@@ -356,24 +409,31 @@ begin
 *)
 		if Year = 2016 then
 		begin
+			if not S2_ReadXML2016Hashes(
+				//DataPath + 'Office\Data\v32.cab',
+				I320Hash,I640Hash) then break;
+
 			if not S3_Verify2016Hashes(
-				CABFile,
 				I320Hash,I640Hash,
-				DataPath,
-				ver
-			) then break;
+				DataPath + 'Office\Data\'+ver+'\'
+			)then break;
+
 			//Verify the damn streams because Microsoft doesn't bother and nothing pisses
 			//me off like copying to USB/DVD for it to be fucking bad.
-			if not S4_VerifyLStreamHash(CABFile,DataPath,Ver) then break;
-			if not S5_VerifyUStreamHash(CABFile,DataPath,Ver) then break;
+			if not S4_VerifyStreamHash(
+				DataPath + 'Office\Data\'+ver+'\',
+				's321033.cab',
+				'stream.x86.'+ ConfigINI.XML_Lang
+			) then break;
+			if not S4_VerifyStreamHash(
+				DataPath + 'Office\Data\'+ver+'\',
+				's320.cab',
+				'stream.x86.x-none'
+			) then break;
 		end;
-
-		ShowMessage('Office ' + IntToStr(Year) + ' Verified');
-
+		VerifyForm.MsgNewLine(Format('Verification of Office %d complete',[Year]));
+		Passed := true;
 	end;
-	CABFile.Free;
 end;
-
-
 
 end.

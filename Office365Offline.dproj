@@ -3,7 +3,7 @@
         <ProjectGuid>{36586440-455B-4FDA-BC53-36CE424E7B71}</ProjectGuid>
         <MainSource>Office365Offline.dpr</MainSource>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Release</Config>
+        <Config Condition="'$(Config)'==''">Debug</Config>
         <TargetedPlatforms>1</TargetedPlatforms>
         <AppType>Application</AppType>
         <FrameworkType>VCL</FrameworkType>
@@ -116,9 +116,12 @@
             <Form>Form2</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="OfficeVerification.pas"/>
         <DCCReference Include="Wait.pas">
             <Form>WaitForm</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="OfficeVerification.pas">
+            <Form>VerifyForm</Form>
             <FormType>dfm</FormType>
         </DCCReference>
         <BuildConfiguration Include="Debug">
@@ -151,7 +154,7 @@
                 <Platform value="Win64">False</Platform>
             </Platforms>
             <Deployment Version="1">
-                <DeployFile LocalName="Release\Win32\Office365Offline.exe" Configuration="Release" Class="ProjectOutput">
+                <DeployFile LocalName="bin\Office365Offline.exe" Configuration="Release" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>Office365Offline.exe</RemoteName>
                         <Overwrite>true</Overwrite>
@@ -539,13 +542,13 @@
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
-                <ProjectRoot Platform="iOSDevice32" Name="$(PROJECTNAME).app"/>
+                <ProjectRoot Platform="OSX32" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="Android" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="Win32" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="iOSDevice64" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="Win64" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="iOSSimulator" Name="$(PROJECTNAME).app"/>
-                <ProjectRoot Platform="OSX32" Name="$(PROJECTNAME).app"/>
+                <ProjectRoot Platform="iOSDevice32" Name="$(PROJECTNAME).app"/>
             </Deployment>
         </BorlandProject>
         <ProjectFileVersion>12</ProjectFileVersion>

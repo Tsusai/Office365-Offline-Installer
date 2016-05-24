@@ -44,9 +44,9 @@ object HelpForm: THelpForm
       
         '*Using the GUI, select 2013 & Download, and click Run.  Repeat f' +
         'or 2016.'
-      '  Note: "Custom Install" has no effect on Download.'
+      '  Note: "Customize Install" has no effect on Download.'
       ''
-      '*Congradulations, you have an Offline Installer for Office!'
+      '*Congratulations, you have an Offline Installer for Office!'
       ''
       '3rd Party Code:'
       
@@ -57,6 +57,5 @@ object HelpForm: THelpForm
         'A256 hashing utility]')
     ReadOnly = True
     TabOrder = 0
-    ExplicitHeight = 197
   end
 end
