@@ -3,7 +3,7 @@ object Mainform: TMainform
   Top = 185
   BorderIcons = [biSystemMenu, biMinimize, biHelp]
   Caption = 'Office Offline Installer'
-  ClientHeight = 177
+  ClientHeight = 207
   ClientWidth = 507
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -19,11 +19,11 @@ object Mainform: TMainform
   PixelsPerInch = 96
   TextHeight = 13
   object Label1: TLabel
-    Left = 303
-    Top = 156
+    Left = 286
+    Top = 182
     Width = 213
     Height = 13
-    Caption = #169' 2016 Tsusai (http://github.com/tsusai)     '
+    Caption = #169' 2018 Tsusai (http://github.com/tsusai)     '
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -33,7 +33,7 @@ object Mainform: TMainform
   end
   object VersionList: TRadioGroup
     Left = 8
-    Top = 32
+    Top = 63
     Width = 209
     Height = 115
     Caption = 'Version'
@@ -50,9 +50,9 @@ object Mainform: TMainform
   end
   object SoftwareList: TCheckListBox
     Left = 223
-    Top = 8
+    Top = 35
     Width = 138
-    Height = 139
+    Height = 141
     Color = clBtnFace
     Enabled = False
     ItemHeight = 13
@@ -79,7 +79,7 @@ object Mainform: TMainform
     OnClick = CustomCheckClick
   end
   object VerBox: TComboBox
-    Left = 128
+    Left = 223
     Top = 8
     Width = 89
     Height = 21
@@ -103,7 +103,7 @@ object Mainform: TMainform
   object TaskBox: TComboBox
     Left = 8
     Top = 8
-    Width = 114
+    Width = 145
     Height = 21
     Style = csDropDownList
     ItemIndex = 0
@@ -140,5 +140,19 @@ object Mainform: TMainform
     Caption = 'Launch Configured Setup'
     TabOrder = 8
     OnClick = RunBtnClick
+  end
+  object LangBox: TComboBox
+    Left = 8
+    Top = 35
+    Width = 145
+    Height = 22
+    Style = csOwnerDrawFixed
+    ItemIndex = 0
+    TabOrder = 9
+    Text = 'English=1033'
+    OnChange = LangBoxChange
+    OnDrawItem = LangBoxDrawItem
+    Items.Strings = (
+      'English=1033')
   end
 end

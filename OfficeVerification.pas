@@ -189,12 +189,12 @@ function S1_CheckFilesExist(
 ) : boolean;
 begin
 	Result := false;
-	if not CheckFile(DataPath + 'v32_'+ver+'.cab') then Exit;
+	if not CheckFile(Format('%sv32_%s.cab',[DataPath,ver])) then Exit;
 	if not CheckFolder(DataPath + ver) then Exit;
-	if not CheckFile(DataPath + ver +'\i321033.cab') then Exit;
-	if not CheckFile(DataPath + ver +'\i641033.cab') then Exit;
+	if not CheckFile(Format('%s%s\i32%d.cab',[DataPath,ver,ConfigINI.LangID])) then Exit;
+	if not CheckFile(Format('%s%s\i64%d.cab',[DataPath,ver,ConfigINI.LangID])) then Exit;
 	if not CheckFile(DataPath + ver +'\s320.cab') then Exit;
-	if not CheckFile(DataPath + ver +'\s321033.cab') then Exit;
+	if not CheckFile(Format('%s%s\s32%d.cab',[DataPath,ver,ConfigINI.LangID])) then Exit;
 	if not CheckFile(Format('%s%s\stream.x86.%s.dat',[DataPath,Ver,ConfigINI.XML_Lang])) then Exit;
 	if not CheckFile(DataPath + ver +'\stream.x86.x-none.dat') then Exit;
 	case Year of
@@ -420,10 +420,15 @@ begin
 
 			//Verify the damn streams because Microsoft doesn't bother and nothing pisses
 			//me off like copying to USB/DVD for it to be fucking bad.
-			if not S4_VerifyStreamHash(
+			{if not S4_VerifyStreamHash(
 				DataPath + 'Office\Data\'+ver+'\',
 				's321033.cab',
 				'stream.x86.'+ ConfigINI.XML_Lang
+			) then break;}
+			if not S4_VerifyStreamHash(
+				Format('%sOffice\Data\%s\',[DataPath,ver]),
+				Format('s32%d.cab',[ConfigINI.LangID]),
+        Format('stream.x86.%s',[ConfigINI.XML_Lang])
 			) then break;
 			if not S4_VerifyStreamHash(
 				DataPath + 'Office\Data\'+ver+'\',

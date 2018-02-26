@@ -1,0 +1,40 @@
+English,1033,en-us
+Spanish,3082,es-es
+French,1036,fr-fr
+Arabic,1025,ar-sa
+Bulgarian,1026,bg-bg
+Chinese (Simplified),2052,zh-cn
+Chinese,1028,zh-tw
+Croatian,1050,hr-hr
+Czech,1029,cs-cz
+Danish,1030,da-dk
+Dutch,1043,nl-nl
+Estonian,1061,et-ee
+Finnish,1035,fi-fi
+German,1031,de-de
+Greek,1032,el-gr
+Hebrew,1037,he-il
+Hindi,1081,hi-in
+Hungarian,1038,hu-hu
+Indonesian,1057,id-id
+Italian,1040,it-it
+Japanese,1041,ja-jp
+Kazakh,1087,kk-kz
+Korean,1042,ko-kr
+Latvian,1062,lv-lv
+Lithuanian,1063,lt-lt
+Malaysia,1086,ms-my
+Norweagian (Bokmal),1044,nb-no
+Polish,1045,pl-pl
+Portugese (Brazil),1046,pt-br
+Portugese,2070,pt-pt
+Romanaian,1048,ro-ro
+Russian,1049,ru-ru
+Serbian (Latin),9242,sr-la
+Slovak,1051,sk-sk
+Slovenian,1060,sl-si
+Swedish,1053,sv-se
+Thai,1054,th-th
+Turkish,1055,tr-tr
+Ukranian,1058,uk-ua
+Vietnamese,1066,vi-vn

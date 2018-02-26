@@ -18,6 +18,7 @@ type
 		UpdateBtn: TButton;
 		RunBtn: TButton;
 		Label1: TLabel;
+		LangBox: TComboBox;
 		procedure RunBtnClick(Sender: TObject);
 		procedure FormCreate(Sender: TObject);
 		procedure CustomCheckClick(Sender: TObject);
@@ -25,6 +26,9 @@ type
 		procedure InstrBtnClick(Sender: TObject);
 		procedure VerifyBtnClick(Sender: TObject);
 		procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure LangBoxDrawItem(Control: TWinControl; Index: Integer;
+      Rect: TRect; State: TOwnerDrawState);
+    procedure LangBoxChange(Sender: TObject);
 	private
 		{ Private declarations }
 	public
@@ -36,6 +40,7 @@ type
 type
 	TConfigINI = record
 		XML_Lang : string;
+		LangID : integer;
 	end;
 
 var
@@ -46,6 +51,7 @@ var
 
 implementation
 uses
+	OfficeLanguageInfo,
 	Help,
 	Wait,
 	OfficeVerification,
@@ -123,7 +129,7 @@ var
 	tmp : string;
 begin
 
-	ProdVersion := 'O365SmallBusPremRetail'; //Need a default for Download Mode
+	ProdVersion := 'O365BusinessRetail'; //Need a default for Download Mode
 	Exclude := '';
 	AFilePath := '';
 	tmp := '';
@@ -144,59 +150,57 @@ begin
 		//forced indent so I can follow flow
 		CurNode := RootNode.AddChild('Add');
 
-		case VerBox.ItemIndex of
-		0: CurNode.Attributes['SourcePath'] := AppPath+'Setup\2013\';
-		1: CurNode.Attributes['SourcePath'] := AppPath+'Setup\2016\';
-		end;
-		CurNode.Attributes['OfficeClientEdition'] := '32';
-			ProdNode := CurNode.AddChild('Product');
-			//Product
-			ProdNode.Attributes['ID'] := ProdVersion;
-				CurNode := ProdNode.AddChild('Language');
-				CurNode.Attributes['ID'] := ConfigINI.XML_Lang;
+	case VerBox.ItemIndex of
+	0: CurNode.Attributes['SourcePath'] := AppPath+'Setup\2013\';
+	1: CurNode.Attributes['SourcePath'] := AppPath+'Setup\2016\';
+	end;
+	CurNode.Attributes['OfficeClientEdition'] := '32';
+	ProdNode := CurNode.AddChild('Product');
+	//Product
+	ProdNode.Attributes['ID'] := ProdVersion;
+	CurNode := ProdNode.AddChild('Language');
+	CurNode.Attributes['ID'] := ConfigINI.XML_Lang;
 
-				//Exclude App Section for custom install
-				if (CustomCheck.Checked) then
-				begin
-					for idx := 0 to SoftwareList.Count-1 do
-					begin
-						if (SoftwareList.ItemEnabled[idx]) then
-						begin
-							if not (SoftwareList.Checked[idx]) then
-							begin
-								Exclude := SoftwareList.Items.Strings[idx];
-								if Exclude = 'OneDrive' then Exclude := 'Groove';
-								CurNode := ProdNode.AddChild('ExcludeApp');
-								CurNode.Attributes['ID'] := Exclude;
-							end;
-						end;
-					end;
-				end;
-			if VersionList.ItemIndex = 5 then
+	//Exclude App Section for custom install
+	if (CustomCheck.Checked) then
+	begin
+		for idx := 0 to SoftwareList.Count-1 do
+		begin
+			if (SoftwareList.ItemEnabled[idx]) then
 			begin
-				CurNode := XML.DocumentElement.ChildNodes['Add'];
-				ProdNode := CurNode.AddChild('Product');
-				case VerBox.ItemIndex of
-				0: ProdNode.Attributes['ID'] := 'LyncRetail'; //2013
-				1: ProdNode.Attributes['ID'] := 'SkypeforBusinessRetail'; //2016
+				if not (SoftwareList.Checked[idx]) then
+				begin
+					Exclude := SoftwareList.Items.Strings[idx];
+					if Exclude = 'OneDrive' then Exclude := 'Groove';
+					CurNode := ProdNode.AddChild('ExcludeApp');
+					CurNode.Attributes['ID'] := Exclude;
 				end;
-
-				CurNode := ProdNode.AddChild('Language');
-				CurNode.Attributes['ID'] := ConfigINI.XML_Lang;
 			end;
-		//Extra common goodies
-		CurNode := RootNode.AddChild('Display');
-		CurNode.Attributes['AcceptEULA'] := 'TRUE';
-		CurNode := RootNode.AddChild('Property');
-		CurNode.Attributes['Name'] := 'AutoActivate';
-		CurNode.Attributes['Value'] := '1';
-		CurNode := RootNode.AddChild('Logging');
-		CurNode.Attributes['Type'] := 'Standard';
-		DateTimeToString(tmp,'log-hhmmss',Now);
-		CurNode.Attributes['Path'] := tmpPath;
-		CurNode.Attributes['Template'] := 'O365Offline(*).txt';
+		end;
+	end;
 
-
+	if VersionList.ItemIndex = 5 then
+	begin
+		CurNode := XML.DocumentElement.ChildNodes['Add'];
+		ProdNode := CurNode.AddChild('Product');
+		case VerBox.ItemIndex of
+		0: ProdNode.Attributes['ID'] := 'LyncRetail'; //2013
+		1: ProdNode.Attributes['ID'] := 'SkypeforBusinessRetail'; //2016
+		end;
+		CurNode := ProdNode.AddChild('Language');
+		CurNode.Attributes['ID'] := ConfigINI.XML_Lang;
+	end;
+	//Extra common goodies
+	CurNode := RootNode.AddChild('Display');
+	CurNode.Attributes['AcceptEULA'] := 'TRUE';
+	CurNode := RootNode.AddChild('Property');
+	CurNode.Attributes['Name'] := 'AutoActivate';
+	CurNode.Attributes['Value'] := '1';
+	CurNode := RootNode.AddChild('Logging');
+	CurNode.Attributes['Type'] := 'Standard';
+	DateTimeToString(tmp,'log-hhmmss',Now);
+	CurNode.Attributes['Path'] := tmpPath;
+	CurNode.Attributes['Template'] := 'O365Offline(*).txt';
 	//We don't need the XML Header.  Just dump the xml
 	AFilePath := tmpPath + 'msofficeinstall.xml';
 
@@ -290,27 +294,6 @@ begin
 	4,5: Prog.CommaText := 'Excel,OneNote,Outlook,PowerPoint,Publisher,Word,OneDrive';
 	end;
 
-	//Yes, Number searching is nanoseconds faster, however with Microsoft coming up
-	//with new SKU combinations, it's just tons easier for this little program
-	//to search by names
-	(*case RadioGroup1.ItemIndex of
-	0: Limit := [0..3];
-	1: Limit := [0..4];
-	2: Limit := [0..6];
-	3: Limit := [0..9];
-	4: Limit := [0..5,7];
-	5: Limit := [0..9];
-	end;
-	{for idx := 0 to CheckListBox1.Count -1 do
-	begin
-		if idx in Limit then
-		begin
-			CheckListBox1.Checked[idx] := true;
-			CheckListBox1.ItemEnabled[idx] := true;
-		end;
-	end;
-	*)
-
 	for idx := 0 to Prog.Count -1 do
 	begin
 		Cidx := SoftwareList.Items.IndexOf(Prog[idx]);
@@ -331,6 +314,21 @@ begin
 	VerifyOfficeData(2016);
 end;
 
+procedure TMainform.LangBoxChange(Sender: TObject);
+begin
+	if LangBox.ItemIndex <> -1 then
+	begin
+		ConfigINI.LangID := StrToInt(LangBox.Items.ValueFromIndex[LangBox.ItemIndex]);
+		ConfigINI.XML_Lang := LangInfo[ConfigINI.LangID];
+	end;
+end;
+
+procedure TMainform.LangBoxDrawItem(Control: TWinControl; Index: Integer;
+  Rect: TRect; State: TOwnerDrawState);
+begin
+	LangBox.Canvas.TextRect(Rect, Rect.Left, Rect.Top, LangBox.Items.Names[Index]);
+end;
+
 procedure TMainform.CustomCheckClick(Sender: TObject);
 begin
 	if (Self.CustomCheck.Checked = true) then
@@ -343,19 +341,6 @@ begin
 		SoftwareList.Enabled := False;
 	end;
 	AdjustCustomInstall;
-end;
-
-procedure TMainform.FormClose(Sender: TObject; var Action: TCloseAction);
-var
-	iniFile : TIniFile;
-begin
-	TDirectory.Delete(tmpPath,true);
-	iniFile := TIniFile.Create(ChangeFileExt(Application.ExeName,'.ini'));
-	try
-		iniFile.WriteString('XML','LanguageCode',ConfigINI.XML_Lang);
-	finally
-		iniFile.Free;
-	end;
 end;
 
 function GetAppVersionStr: string;
@@ -384,8 +369,11 @@ end;
 procedure TMainform.FormCreate(Sender: TObject);
 var
 	iniFile : TIniFile;
+	idx : integer; //LangID
+	idx2 : integer; //forloop
 begin
 	AppPath := ExtractFilePath(ParamStr(0));
+	LoadLanguageInfo;
 	tmpPath := TPath.GetTempPath + 'O365OfflineTmp\';
 	ForceDirectories(tmpPath);
 	AdjustCustomInstall;
@@ -393,9 +381,42 @@ begin
 	Application.Title := Caption;
 	iniFile := TIniFile.Create(ChangeFileExt(Application.ExeName,'.ini'));
 	try
-		ConfigINI.XML_Lang := iniFile.ReadString('XML','LanguageCode','en-US');
+		ConfigINI.XML_Lang := Lowercase(iniFile.ReadString('Settings','LanguageCode','en-US'));
+		for idx in LangInfo.Keys do
+		begin
+			if LangInfo[idx] = ConfigINI.XML_Lang then
+			begin
+				for idx2 :=LangBox.Items.Count-1 downto 0 do
+				begin
+					if StrToIntDef(LangBox.Items.ValueFromIndex[idx2],0) = idx then
+					begin
+						ConfigINI.LangID := idx;
+						LangBox.ItemIndex := idx2;
+						break;
+					end;
+				end;
+			end;
+		end;
 	finally
 		iniFile.Free;
+	end;
+end;
+
+procedure TMainform.FormClose(Sender: TObject; var Action: TCloseAction);
+var
+	iniFile : TIniFile;
+	idx : integer;
+begin
+	TDirectory.Delete(tmpPath,true);
+	idx := StrToInt(LangBox.Items.ValueFromIndex[LangBox.ItemIndex]);
+	iniFile := TIniFile.Create(ChangeFileExt(Application.ExeName,'.ini'));
+	try
+		iniFile.WriteString('Settings','LanguageCode',LangInfo[idx]);
+	finally
+		begin
+			iniFile.Free;
+			Action := caFree;
+		end;
 	end;
 end;
 
